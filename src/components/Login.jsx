@@ -17,7 +17,7 @@ const Login = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   useEffect(() => {}, []);
-// login đang bị vấn đề 
+
   return (
     <div className="p-5 " style={{ minHeight: "100vh" }}>
       <div className=" d-flex justify-content-center">
