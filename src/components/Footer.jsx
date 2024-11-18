@@ -31,7 +31,14 @@ const Footer = () => {
         console.log(error);
       });
   }, []);
-
+  useEffect(() => {
+    // nhận event từ server
+    socket.on("sv-send-mess", ({ user_id, content }) => {
+      let newData = [...dataChat];
+      newData.push({ user_id, content });
+      setDataChat(newData);
+    });
+  },[dataChat]);
   return (
     <div>
       <button
@@ -59,27 +66,41 @@ const Footer = () => {
           </button>
         </div>
         <ol className="discussion" id="chat-noiDung">
-          <li className="self">
-            <div className="avatar">
-              <img src="https://amp.businessinsider.com/images/5947f16889d0e20d5e04b3d9-750-562.jpg" />
-            </div>
-            <div className="messages">
-              Hallo
-              <br />
-              <time dateTime="2009-11-13T20:14">2/2/2022 22:22</time>
-            </div>
-          </li>
+          {dataChat?.map((item) => {
+            // lấy token từ local storage
+            let userLogin = localStorage.getItem("LOGIN_USER");
+            // giải mã (decode token) để lấy user_id
+            let userInfo = userLogin ? jwtDecode(userLogin) : null;
+            let user_id = userInfo.payload.userId;
 
-          <li className="other">
-            <div className="avatar">
-              <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHTEFMnih7ZgOPIZej2dclAphUeOhVR1OIFaPoYCOqm9fY1Fv7" />
-            </div>
-            <div className="messages">
-              Nope
-              <br />
-              <time dateTime="2009-11-13T20:00">2/2/2022 22:22</time>
-            </div>
-          </li>
+            if (user_id == item.user_id) {
+              return (
+                <li className="self">
+                  <div className="avatar">
+                    <img src="https://amp.businessinsider.com/images/5947f16889d0e20d5e04b3d9-750-562.jpg" />
+                  </div>
+                  <div className="messages">
+                    {item.content}
+                    <br />
+                    <time dateTime="2009-11-13T20:14">2/2/2022 22:22</time>
+                  </div>
+                </li>
+              );
+            } else {
+              return (
+                <li className="other">
+                  <div className="avatar">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHTEFMnih7ZgOPIZej2dclAphUeOhVR1OIFaPoYCOqm9fY1Fv7" />
+                  </div>
+                  <div className="messages">
+                    {item.content}
+                    <br />
+                    <time dateTime="2009-11-13T20:00">2/2/2022 22:22</time>
+                  </div>
+                </li>
+              );
+            }
+          })}
         </ol>
         <div className="chatBottom">
           <input
@@ -99,6 +120,14 @@ const Footer = () => {
             id="btn-send"
             onClick={() => {
               // lấy user_id từ access token (local storage)
+              let userLogin = localStorage.getItem("LOGIN_USER");
+              // decode token
+              let userInfo = userLogin ? jwtDecode(userLogin) : null;
+              console.log(userInfo);
+              let user_id = userInfo.payload.userId;
+              let content = document.getElementById("txt-chat").value;
+              // send event cho server
+              socket.emit("send-mess", { user_id, content });
             }}
             type="button"
             className="sendbtn"
